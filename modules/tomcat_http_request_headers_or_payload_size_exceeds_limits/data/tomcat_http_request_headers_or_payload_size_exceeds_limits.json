@@ -1,0 +1,118 @@
+{
+  "name": "tomcat_http_request_headers_or_payload_size_exceeds_limits",
+  "description": "This incident type occurs when the size of HTTP request headers or payload exceeds the limits set by Tomcat server. When this happens, the server may reject the request or return an error message, causing disruption to the normal functioning of the web application. This can be caused by a variety of factors, including large file uploads, excessive use of cookies or query parameters, or attacks that intentionally send oversized requests.",
+  "params": [
+    {
+      "name": "PATH_TO_TOMCAT_CONFIG_FILE",
+      "value": ""
+    },
+    {
+      "name": "PATH_TO_CONFIG_FILE",
+      "value": ""
+    },
+    {
+      "name": "NEW_MAXIMUM_SIZE",
+      "value": ""
+    },
+    {
+      "name": "URL",
+      "value": ""
+    },
+    {
+      "name": "TOKEN",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Tomcat HTTP Request Headers or Payload Size Exceeds Limits.\nThis incident type occurs when the size of HTTP request headers or payload exceeds the limits set by Tomcat server. When this happens, the server may reject the request or return an error message, causing disruption to the normal functioning of the web application. This can be caused by a variety of factors, including large file uploads, excessive use of cookies or query parameters, or attacks that intentionally send oversized requests."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the current open file limit"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `ulimit -n`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the maximum size limit for HTTP requests"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `grep -i \"LimitRequest\" ${PATH_TO_CONFIG_FILE}`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the maximum size limit for HTTP POST requests"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `grep -i \"LimitRequestBody\" ${PATH_TO_CONFIG_FILE}`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the current size of the HTTP request headers"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `curl -I -X GET -H \"Content-Type: application/json\" -H \"Authorization: Bearer ${TOKEN}\" ${URL} | grep -i \"content-length\"`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the current size of the HTTP request payload"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `curl -X GET -H \"Content-Type: application/json\" -H \"Authorization: Bearer ${TOKEN}\" ${URL} | wc -c`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Increase the maximum allowable size for HTTP request headers or payload in Tomcat configuration."
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_tomcat_config_update($PATH_TO_TOMCAT_CONFIG_FILE, $NEW_MAXIMUM_SIZE)"
+    }
+  ]
+}
